@@ -1,20 +1,30 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Secretaria API
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+## Tags
+`.net-8` `ddd` `api` `jwt` `matriculas` `alunos` `cursos`
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+Este é um sistema API desenvolvido em .NET 8 com arquitetura DDD (Domain-Driven Design), destinado a funcionalidades da secretaria acadêmica. Ele permite a atualização de notas, verificação de matrícula, busca de histórico de alunos e listagem de alunos por curso.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Funcionalidades
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+### PUT /api/Matriculas/{idMatricula} 
+
+Permite a atualização das notas de um aluno matriculado em um curso.
+
+### POST /api/Matriculas/VerificarMatricula
+
+Verifica se um aluno está matriculado em um curso específico.
+
+### GET /api/Matriculas/BuscarMatriculaPorAluno/{idAluno}
+
+Busca o histórico de matrículas de um aluno específico.
+
+### GET /api/Matriculas/BuscarMatriculaPorCurso/{idCurso}
+
+Lista os alunos matriculados em um curso específico.
+
+## Integração com Sistemas Externos
+
+Este sistema faz integração com os seguintes sistemas externos:
+- [Sistema de Usuários](https://github.com/MARIO-IVISA/Usuarios): Utilizado para autenticação de usuários e geração de tokens JWT.
+- [Cursos API](https://github.com/MARIO-IVISA/CursosApi): Utilizado para obter informações sobre os cursos e gerar o token JWT.
