@@ -3,11 +3,15 @@
 ## Tags
 `.net-8` `ddd` `api` `jwt` `matriculas` `alunos` `cursos`
 
-Este é um sistema API desenvolvido em .NET 8 com arquitetura DDD (Domain-Driven Design), destinado a funcionalidades da secretaria acadêmica. Ele permite a atualização de notas, verificação de matrícula, busca de histórico de alunos e listagem de alunos por curso.
+Este é um sistema API desenvolvido em .NET 8 com arquitetura DDD (Domain-Driven Design), destinado a funcionalidades da secretaria acadêmica. Ele permite a matricula de alunos, atualização de notas, verificação de matrícula, busca de histórico de alunos e listagem de alunos por curso.
 
 ## Funcionalidades
 
-### PUT /api/Matriculas/{idMatricula} 
+### POST /api/Matriculas
+
+Faz a matricula do aluno no curso e envia para a mensageria dados para matricula para email..
+
+### PUT /api/Matriculas
 
 Permite a atualização das notas de um aluno matriculado em um curso.
 
