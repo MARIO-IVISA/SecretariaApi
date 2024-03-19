@@ -1,16 +1,22 @@
 ﻿using AutoMapper;
+using Microsoft.Azure.ServiceBus;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Secretaria.Api.Settings;
 using Secretaria.Application.Contracts;
 using Secretaria.Application.Models;
 using Secretaria.Core.Enums;
 using Secretaria.Domain.Contracts.Services;
 using Secretaria.Domain.Entities;
 using Secretaria.Infrastructure.Migrations;
+using Secretaria.WorkerService.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XAct;
+using XAct.Messages;
 
 namespace Secretaria.Application.Services
 {
@@ -19,21 +25,30 @@ namespace Secretaria.Application.Services
         private readonly IMatriculaDomainService _matriculaDomainService;
         private IMapper _mapper;
         private IApiService _apiService;
+        private readonly IConfiguration _configuration;
+        private readonly QueueClient _queueClient;
+
         public MatriculaApplicationService(IMatriculaDomainService matriculaDomainService, IMapper mapper, IApiService apiService)
         {
             _matriculaDomainService = matriculaDomainService;
             _mapper = mapper;
             _apiService = apiService;
+            _queueClient = new QueueClient(AppSettings.ConnectionStringServiceBus, AppSettings.NomeFilaServiceBus);
         }
 
-        public async Task<Matricula> Inserir(MatriculaCadastroModel model)
+        public async Task<Matricula> Inserir(MatriculaCadastroModel model, string authorizationHeader)
         {
+            string token = authorizationHeader.Replace("Bearer ", "");
+
             var verificaMatricula = _matriculaDomainService.BuscarPorAlunoCurso(model.AlunosId, model.CursoId);
             if (verificaMatricula.Result != null)
                 throw new ArgumentException("O aluno já está matriculado nesse curso.");
 
-            Matricula noticia = _mapper.Map<Matricula>(model);
-            return await _matriculaDomainService.Inserir(noticia);
+            Matricula aluno = _mapper.Map<Matricula>(model);
+
+            await CriarMensagem(aluno, token);
+
+            return await _matriculaDomainService.Inserir(aluno);
         }
 
         public async Task<ListagemAlunoCursoModel> BuscarPorCurso(Guid idCurso, string authorizationHeader)
@@ -89,14 +104,19 @@ namespace Secretaria.Application.Services
             };
         }
 
-        public async Task<Matricula> AtualizaNota(AtualizarNotaModel matricula)
+        public async Task<Matricula> AtualizaNota(AtualizarNotaModel matricula, string authorizationHeader)
         {
+            string token = authorizationHeader.Replace("Bearer ", "");
+
+
             var matriculaExistente = await _matriculaDomainService.BuscarPorId(matricula.id);
             if (matriculaExistente == null)
                 throw new ArgumentException("Matrícula não encontrada.");
 
             matriculaExistente.Nota = matricula.nota;
             matriculaExistente.Status = matricula.nota >= matricula.media ? StatusAprovacao.Aprovado : StatusAprovacao.Reprovado;
+            
+            await CriarMensagem(matriculaExistente, token);
 
             return await _matriculaDomainService.AtualizaNota(matriculaExistente);
         }
@@ -111,9 +131,34 @@ namespace Secretaria.Application.Services
             var aluno = await _matriculaDomainService.VerificarMatricula(matricula.AlunosId, matricula.CursoId);
             if (aluno != null)
             {
-                return $"Matriculado"; 
+                return $"Matriculado";
             }
             return "Disponível";
+        }
+        
+        public async Task<string> CriarMensagem(Matricula matricula, string token)
+        {
+            var aluno = await _apiService.ObterUsuarioPorId(matricula.AlunosId);
+            var curso = await _apiService.ObterCursosPorId(matricula.CursoId, token);
+            AlunoModel model = new AlunoModel();
+            model.Email = aluno.Usuario.Email;
+            model.Nome = aluno.Usuario.Nome;
+            model.StatusAprovacao = StatusAprovacao.Aprovado;
+            model.NomeCurso = curso.Nome;
+
+            return "Aluno Criado";
+        }
+        public async Task<string> EnviarMensagem(AlunoModel model)
+        {
+            var inputModelJsonString = JsonConvert.SerializeObject(model);
+
+            var messageBytes = Encoding.UTF8.GetBytes(inputModelJsonString);
+
+            var message = new Microsoft.Azure.ServiceBus.Message(messageBytes);
+
+            await _queueClient.SendAsync(message);
+
+            return "Enviado mensagem";
         }
     }
 }

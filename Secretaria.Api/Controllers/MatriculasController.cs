@@ -24,12 +24,34 @@ namespace Secretaria.Api.Controllers
             _matriculaAppService = matriculaAppService;
             _httpContextAccessor = httpContextAccessor;
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Cadastrarluno(MatriculaCadastroModel matricula)
+        {
+            try
+            {
+                string authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+                if (string.IsNullOrEmpty(authorizationHeader))
+                    return Unauthorized();
+                await _matriculaAppService.Inserir(matricula, authorizationHeader);
+
+                return StatusCode(200, new { message = "Nota atualizada com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
         [HttpPut]
         public async Task<IActionResult> AtualizarNota(AtualizarNotaModel nota)
         {
             try
             {
-                await _matriculaAppService.AtualizaNota(nota);
+                string authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+                if (string.IsNullOrEmpty(authorizationHeader))
+                    return Unauthorized();
+
+                await _matriculaAppService.AtualizaNota(nota, authorizationHeader);
 
                 return StatusCode(200, new { message = "Nota atualizada com sucesso!" });
             }

@@ -10,11 +10,11 @@ namespace Secretaria.Application.Contracts
 {
     public interface IMatriculaApplicationService : IDisposable
     {
-        Task<Matricula> Inserir(MatriculaCadastroModel matricula);
+        Task<Matricula> Inserir(MatriculaCadastroModel matricula,string authorizationHeader);
         Task<string> VerificarMatricula(MatriculaCadastroModel matricula);
         Task<ListagemAlunoCursoModel> BuscarPorCurso(Guid idCurso, string authorizationHeader);
         Task<ListagemHistoricoAlunoViewModel> BuscarPorAluno(Guid idAluno, string authorizationHeader);
-        Task<Matricula> AtualizaNota(AtualizarNotaModel matricula);
+        Task<Matricula> AtualizaNota(AtualizarNotaModel matricula, string authorizationHeader);
     }
 }
 
